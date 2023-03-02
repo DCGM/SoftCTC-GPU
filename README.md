@@ -34,7 +34,7 @@ cmake ../ <options>
 -DCUDNN_ROOT="C:\Program Files\NVIDIA\CUDNN\v8.8"
 ```
 - Additional options for CMake:
-```shell
+```
 -DENABLE_OPENCL=ON          enable compilation of OpenCL implementation (add CTCOpenCLFloat/CTCOpenCLDouble classes)
 -DENABLE_CUDA=OFF           disable compilation of Cuda implementation
 -DENABLE_TORCH=OFF          disable support for torch buffers
