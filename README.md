@@ -1,2 +1,2 @@
-# SoftCTC-GPU-
+# SoftCTC-GPU
 GPU implementation of SoftCTC loss.
