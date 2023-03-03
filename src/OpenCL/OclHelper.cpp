@@ -212,31 +212,39 @@ bool oclCreateProgramWithSource(cl_program &program, cl_context context, cl_devi
   return true;
 }
 
+bool oclCreateProgramWithContent(cl::Program& program, const cl::Context& context, const cl::Device& device, const std::string& program_defines, const std::string& program_content, std::ostream* error_stream)
+{
+    int32_t err_msg, err_msg_log;
+    cl::Program::Sources p_sources;
+    p_sources.emplace_back(program_content.c_str(), 0);
+
+    program = cl::Program(context, p_sources, &err_msg);
+    if (!oclPrintError(err_msg, "BoostDetector: cl::Program")) return false;
+
+    err_msg = program.build(std::vector<cl::Device>(1, device), program_defines.c_str(), NULL, NULL);
+
+#ifndef DEBUG_BUILD_LOG
+    if (err_msg != CL_BUILD_SUCCESS)
+#endif
+    {
+        std::cerr << "Build parameters: " << program_defines << std::endl;
+        std::cerr << "Build log : " << std::endl << program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(device, &err_msg_log) << std::endl;
+        oclPrintErrorExit(err_msg_log, "BoostDetector: cl::Program::getBuildInfo<CL_PROGRAM_BUILD_LOG> p_detector");
+    }
+    oclPrintErrorExit(err_msg, "BoostDetector: cl::Program::build p_detector");
+
+    return true;
+}
+
 bool oclCreateProgramWithSource(cl::Program &program, const cl::Context &context, const cl::Device &device, const std::string &program_defines, const std::string &program_file_name, std::ostream *error_stream)
 {
 	int32_t err_msg, err_msg_log;
-	std::string p_source;
-	if (!read_file(program_file_name, p_source)) { if (error_stream != NULL) *error_stream << "Error: Cannot read kernel file.\n"; return false; }
-	cl::Program::Sources p_sources;
-	p_sources.emplace_back(p_source.c_str(), 0);
-
-	program = cl::Program(context, p_sources, &err_msg);
-	if (!oclPrintError(err_msg, "BoostDetector: cl::Program")) return false;
-
-	err_msg = program.build(std::vector<cl::Device>(1, device), program_defines.c_str(), NULL, NULL);
-
-#ifndef DEBUG_BUILD_LOG
-	if (err_msg != CL_BUILD_SUCCESS)
-#endif
-	{
-		std::cerr << "Build parameters: " << program_defines << std::endl;
-		std::cerr << "Build log " << program_file_name << " : " << std::endl << program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(device, &err_msg_log) << std::endl;
-		oclPrintErrorExit(err_msg_log, "BoostDetector: cl::Program::getBuildInfo<CL_PROGRAM_BUILD_LOG> p_detector");
-	}
-	oclPrintErrorExit(err_msg, "BoostDetector: cl::Program::build p_detector");
-
-	return true;
+	std::string program_content;
+	if (!read_file(program_file_name, program_content)) { if (error_stream != NULL) *error_stream << "Error: Cannot read kernel file.\n"; return false; }
+    return oclCreateProgramWithContent(program, context, device, program_defines, program_content, error_stream);
 }
+
+
 
 size_t getMaximumGpuThreads(const cl::Device &device)
 {
@@ -393,6 +401,22 @@ e_ocl_compile compileOpenclSource(cl_program &program, cl_context context, cl_de
   return OCL_COMPILE_CACHED;
 }
 #else
+
+bool createBinaryConfigFromContent(std::string& binary_config, const cl::Device device, const std::string& program_defines, const std::string& program_content, std::ostream* error_stream)
+{
+    std::ostringstream out_stream;
+
+    // append file info
+    out_stream << device.getInfo<CL_DEVICE_VENDOR>() << ";";
+    out_stream << device.getInfo<CL_DEVICE_NAME>() << ";";
+    out_stream << device.getInfo<CL_DEVICE_VERSION>() << ";";
+    out_stream << device.getInfo<CL_DRIVER_VERSION>() << ";";
+    out_stream << program_content << ";";
+    out_stream << program_defines;
+    binary_config = out_stream.str();
+    return true;
+}
+
 bool createBinaryConfig(std::string &binary_config, const cl::Device device, const std::string &program_defines, const std::string &kernel_file_name, std::ostream *error_stream)
 {
 	std::ostringstream out_stream;
@@ -529,6 +553,29 @@ e_ocl_compile compileOpenclSource(cl::Program &program, const cl::Context &conte
 
 	return OCL_COMPILE_CACHED;
 }
+
+e_ocl_compile compileOpenclContent(cl::Program& program, const cl::Context& context, const cl::Device& device, const std::string& program_defines, const std::string& program_content, std::ostream* error_stream)
+{
+    std::string bin_config;
+    if (!createBinaryConfigFromContent(bin_config, device, program_defines, program_content, error_stream)) return OCL_COMPILE_FAILED;
+
+    // get hash dir
+    std::filesystem::path hash_dir_path(compute_cache_dir);
+    hash_dir_path.append(createStringHash(bin_config));
+
+    unsigned int binary_id;
+    std::string binary_data;
+    if ((!getBinaryId(binary_id, bin_config, hash_dir_path.generic_string(), error_stream)) ||
+        (!oclLoadBinary(binary_data, hash_dir_path, binary_id, error_stream)) ||
+        (!oclCreateProgramWithBinary(program, context, device, program_defines, binary_data, error_stream)))
+    {
+        if (!oclCreateProgramWithContent(program, context, device, program_defines, program_content, error_stream)) return OCL_COMPILE_FAILED;
+        if (!oclSaveBinary(program, bin_config, hash_dir_path, binary_id, error_stream)) return OCL_COMPILE_FAILED;
+        return OCL_COMPILE_COMPILED;
+    }
+
+    return OCL_COMPILE_CACHED;
+}
 #endif
 #else
 e_ocl_compile compileOpenclSource(cl_program &program, cl_context context, cl_device_id device, const std::string &program_defines, const std::string &kernel_file_name, std::ostream *error_stream)
@@ -540,6 +587,12 @@ e_ocl_compile compileOpenclSource(cl::Program &program, const cl::Context &conte
 {
 	if(!oclCreateProgramWithSource(program, context, device, program_defines, kernel_file_name, error_stream)) return OCL_COMPILE_FAILED;
 	return OCL_COMPILE_CACHED;
+}
+
+e_ocl_compile compileOpenclContent(cl::Program& program, const cl::Context& context, const cl::Device& device, const std::string& program_defines, const std::string& program_content, std::ostream* error_stream)
+{
+    if (!oclCreateProgramWithContent(program, context, device, program_defines, program_content, error_stream)) return OCL_COMPILE_FAILED;
+    return OCL_COMPILE_CACHED;
 }
 #endif
 

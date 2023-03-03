@@ -44,6 +44,7 @@ bool read_file(const std::string &filename, std::string &out_data);
 
 e_ocl_compile compileOpenclSource(cl_program &program, cl_context context, cl_device_id device, const std::string &program_defines, const std::string &kernel_file_name, std::ostream *error_stream = &std::cerr);
 e_ocl_compile compileOpenclSource(cl::Program &program, const cl::Context &context, const cl::Device &device, const std::string &program_defines, const std::string &kernel_file_name, std::ostream *error_stream = &std::cerr);
+e_ocl_compile compileOpenclContent(cl::Program& program, const cl::Context& context, const cl::Device& device, const std::string& program_defines, const std::string& program_content, std::ostream* error_stream = &std::cerr);
 
 enum e_device_type
 {

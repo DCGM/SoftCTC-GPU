@@ -2,6 +2,12 @@
 #define CTC_OPENCL_H
 
 #define _USE_MATH_DEFINES
+#ifdef USE_INTEGRATED_OPENCL_KERNELS
+extern const char* ctc_common_file_content;
+extern const char* ctc_main_file_content;
+extern const char* ctc_helper_file_content;
+#endif
+
 #include <math.h>
 #include <iostream>
 #include <array>
@@ -455,6 +461,20 @@ bool CTCOpenCL<T>::initCL(bool device_from_stdin)
 		std::cerr << "Error: CTCOpenCL<T>::initCL: Unsupported datatype. Supported types are float and double" << std::endl;
 		return false;
 	}
+	#ifdef USE_INTEGRATED_OPENCL_KERNELS
+	std::string program_main_source(std::string(ctc_common_file_content) + std::string(ctc_main_file_content));
+	if (compileOpenclContent(ctc_main_program, context, device, defines, program_main_source) == OCL_COMPILE_FAILED)
+	{
+		std::cerr << "Error while loading OpenCL main program." << std::endl;
+		return false;
+	}
+	std::string program_helper_source(std::string(ctc_common_file_content) + std::string(ctc_helper_file_content));
+	if (compileOpenclContent(ctc_helper_program, context, device, defines, program_helper_source) == OCL_COMPILE_FAILED)
+	{
+		std::cerr << "Error while loading OpenCL helper program." << std::endl;
+		return false;
+	}
+	#else
 	std::string program_main_filepath("kernels/ctc_main.cl");
 	if (compileOpenclSource(ctc_main_program, context, device, defines, program_main_filepath) == OCL_COMPILE_FAILED)
 	{
@@ -467,6 +487,7 @@ bool CTCOpenCL<T>::initCL(bool device_from_stdin)
 		std::cerr << "Error while loading OpenCL helper program." << std::endl;
 		return false;
 	}
+	#endif
 
 	init_kernel = cl::Kernel(ctc_helper_program, "ctc_init", &err_id);
 	if (!oclPrintError(err_id, "Error while creating ctc_init kernel.")) return false;
