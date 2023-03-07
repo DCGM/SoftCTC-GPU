@@ -2,7 +2,7 @@
 GPU implementation of SoftCTC loss. See [SoftCTC repository](https://github.com/DCGM/SoftCTC) for more information. 
 
 ## Required libs
-- ```cuda 11.X``` (tested on 11.8, needed only with Cuda flag enabled)
+- ```cuda 11.X``` (tested on 12.0, needed only with Cuda flag enabled)
 - ```cudnn``` (tested on 8.8, needed only for cuda enabled pytorch)
 - ```pytorch with cuda 11.X support``` (cuda enabled pytorch is needed only for copyless passing of cuda buffers)
 - ```OpenCL >=1.1``` (needed only with OpenCL flag enabled)
@@ -35,10 +35,12 @@ cmake ../ <options>
 ```
 - Additional options for CMake:
 ```
--DENABLE_OPENCL=ON          enable compilation of OpenCL implementation (add CTCOpenCLFloat/CTCOpenCLDouble classes)
--DENABLE_CUDA=OFF           disable compilation of Cuda implementation
+-DENABLE_OPENCL=ON          enable compilation of OpenCL library (add CTCOpenCLFloat/CTCOpenCLDouble classes)
+-DENABLE_CUDA=OFF           disable compilation of Cuda library
 -DENABLE_TORCH=OFF          disable support for torch buffers
 -DENABLE_COMPUTE_CACHE=OFF  disable OpenCL Cache
 -DENABLE_PYBIND=OFF         disable PyBind (Compile as executable)
--DENABLE_PYBIND=OFF         enable printing of Cuda/OpenCL kernel and copy times (On Cuda available only with sync_native argument of CTCCudaFloat/CTCCudaDouble classes set to true)
+-DENABLE_PROFILLING=ON         enable printing of Cuda/OpenCL kernel and copy times (On Cuda available only with sync_native argument of CTCCudaFloat/CTCCudaDouble classes set to true)
+-DENABLE_INTEGRATED_OPENCL_KERNELS=OFF         disable integration of kernel into so library (kernels is copied separately)
+-ENABLE_STATIC_COMPILATION=OFF         disable static compilation of cudart library (libraries is build for specified major cuda version and placed to specific directory)  
  ```
