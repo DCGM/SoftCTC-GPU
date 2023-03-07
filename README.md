@@ -4,7 +4,7 @@ GPU implementation of SoftCTC loss. See [SoftCTC repository](https://github.com/
 ## Required libs
 - ```cuda 11.X``` (tested on 12.0, needed only with Cuda flag enabled)
 - ```cudnn``` (tested on 8.8, needed only for cuda enabled pytorch)
-- ```pytorch with cuda 11.X support``` (cuda enabled pytorch is needed only for copyless passing of cuda buffers)
+- ```pytorch with cuda 11.X support``` (cuda enabled pytorch is needed only for copyless passing of cuda buffers, prebuild libraries were linked against version 1.13.1)
 - ```OpenCL >=1.1``` (needed only with OpenCL flag enabled)
 - ```CMake >=3.24```
 
