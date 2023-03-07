@@ -35,12 +35,12 @@ cmake ../ <options>
 ```
 - Additional options for CMake:
 ```
--DENABLE_OPENCL=ON          enable compilation of OpenCL library (add CTCOpenCLFloat/CTCOpenCLDouble classes)
--DENABLE_CUDA=OFF           disable compilation of Cuda library
--DENABLE_TORCH=OFF          disable support for torch buffers
--DENABLE_COMPUTE_CACHE=OFF  disable OpenCL Cache
--DENABLE_PYBIND=OFF         disable PyBind (Compile as executable)
--DENABLE_PROFILLING=ON         enable printing of Cuda/OpenCL kernel and copy times (On Cuda available only with sync_native argument of CTCCudaFloat/CTCCudaDouble classes set to true)
--DENABLE_INTEGRATED_OPENCL_KERNELS=OFF         disable integration of kernel into so library (kernels is copied separately)
--ENABLE_STATIC_COMPILATION=OFF         disable static compilation of cudart library (libraries is build for specified major cuda version and placed to specific directory)  
+-DENABLE_OPENCL=ON                      enable compilation of OpenCL library (add CTCOpenCLFloat/CTCOpenCLDouble classes)
+-DENABLE_CUDA=OFF                       disable compilation of Cuda library
+-DENABLE_TORCH=OFF                      disable support for torch buffers
+-DENABLE_COMPUTE_CACHE=OFF              disable OpenCL Cache
+-DENABLE_PYBIND=OFF                     disable PyBind (Compile as executable)
+-DENABLE_PROFILLING=ON                  enable printing of Cuda/OpenCL kernel and copy times (On Cuda available only with sync_native argument of CTCCudaFloat/CTCCudaDouble classes set to true)
+-DENABLE_INTEGRATED_OPENCL_KERNELS=OFF  disable integration of kernel into so library (kernels is copied separately)
+-ENABLE_STATIC_COMPILATION=OFF          disable static compilation of cudart library (libraries is build for specified major cuda version and placed to specific directory)  
  ```
