@@ -356,7 +356,7 @@ bool CTCOpenCL<T>::calcCTCCore(T* grads, T* loss,
 { 
 	if (!this->isValid())
 	{
-		std::cerr << "Error: CTC is not in valid state. Cannot process projToSphere." << std::endl;
+		std::cerr << "Error: CTC is not in valid state. Cannot process kernel." << std::endl;
 		return false;
 	}
 	cl::Event* ev_init = NULL;
@@ -454,7 +454,7 @@ bool CTCOpenCL<T>::initCL(bool device_from_stdin)
 
 	if (!oclPrintError(err_id, "Error while creating cl::CommandQueue.")) return false;
 	//std::string defines(" -D BLOCK_SIZE=" + std::to_string(this->range.getFlatSize()));
-	std::string defines(" -Ikernels/");
+	std::string defines(" -Isoft_ctc/libs/opencl/kernels/");
 	if (std::is_same<T, double>()) defines += " -DUSE_DOUBLE";
 	else if (!std::is_same<T, float>())
 	{
@@ -475,13 +475,13 @@ bool CTCOpenCL<T>::initCL(bool device_from_stdin)
 		return false;
 	}
 	#else
-	std::string program_main_filepath("kernels/ctc_main.cl");
+	std::string program_main_filepath("soft_ctc/libs/opencl/kernels/ctc_main.cl");
 	if (compileOpenclSource(ctc_main_program, context, device, defines, program_main_filepath) == OCL_COMPILE_FAILED)
 	{
 		std::cerr << "Error while loading OpenCL main program." << std::endl;
 		return false;
 	}
-	std::string program_helper_filepath("kernels/ctc_helper.cl");
+	std::string program_helper_filepath("soft_ctc/libs/opencl/kernels/ctc_helper.cl");
 	if (compileOpenclSource(ctc_helper_program, context, device, defines, program_helper_filepath) == OCL_COMPILE_FAILED)
 	{
 		std::cerr << "Error while loading OpenCL helper program." << std::endl;
